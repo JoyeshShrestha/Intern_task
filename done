@@ -1,0 +1,93 @@
+ public String addOperator(Request request, Response response) throws SQLException {
+        response.type("application/json");
+
+        Operator operator = new Gson().fromJson(request.body(), Operator.class);
+
+        operatorDoa.addAnOperator(operator);
+        return "Successfully Added";
+    }
+
+    public String displayallOperator(Request request, Response response) throws SQLException {
+        response.type("text/plain");
+
+        ArrayList allOperator = operatorDoa.displayAll();
+        String allOperatorString = allOperator.toString();
+
+        response.type("application/json");
+        return new Gson().toJson(allOperator);
+    }
+
+    public String displaySpecificOperator(Request request, Response response, String email) throws SQLException {
+        System.out.println(email);
+        Operator operator = operatorDoa.displaySpecific(email);
+        response.type("application/json");
+
+        return new Gson().toJson(operator.toString());
+
+    }
+
+    String deleteSpecificOperator(Request request, Response response, String email) throws SQLException {
+        String operator = operatorDoa.deleteSpecific(email);
+        return operator;
+
+//        return null;
+    }
+
+    String updateSpecificOperator(Request request, Response response, String email) {
+        response.type("application/json");
+        if (email.isEmpty()) {
+            response.status(400);
+            return "Incomplete Data Sent";
+        }
+        Operator operator;
+        try {
+            operator = new Gson().fromJson(request.body(), Operator.class);
+        } catch (Exception e) {
+
+            response.status(400);
+
+            return "Bad Request";
+        }
+        if (operator.getName().isEmpty()) {
+            response.status(400);
+
+            return "Bad Request";
+        }
+        if (!(Pattern.matches("[a-zA-Z]+", operator.getName()))) {
+            response.status(422);
+
+            return "Invalid Data Provided";
+        }
+        if (!(Pattern.matches("[0-9]{1}+", operator.getAddress_id()))) {
+            response.status(422);
+
+            return "Invalid Data Provided";
+        }
+        if (!(Pattern.matches("[0-9]{1}+", operator.getRole_id()))) {
+
+            response.status(422);
+
+            return "Invalid Data Provided";
+        }
+        String emailChecker = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+        System.out.println("Email Check: " + (Pattern.matches(emailChecker, operator.getEmail())));
+        if (!(Pattern.matches(emailChecker, operator.getEmail()))) {
+            response.status(422);
+
+            return "Invalid Data Provided";
+        }
+//        if(operator.getName())
+        System.out.println("hello");
+        try {
+            operatorDoa.updateSpecific(operator, email);
+        } catch (NotFoundException ex) {
+
+            response.status(ex.getStatusCode());
+            return "User Not Found";
+
+        }
+//        return new Gson().toJson(operator.toString());
+        return "Successfully Updated " + email; //To change body of generated methods, choose Tools | Templates.
+    }
+
+}
